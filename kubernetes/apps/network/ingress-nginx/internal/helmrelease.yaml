@@ -2,7 +2,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: ingress-nginx-external
+  name: ingress-nginx-internal
 spec:
   interval: 30m
   chart:
@@ -20,31 +20,23 @@ spec:
     cleanupOnFail: true
     remediation:
       retries: 3
-  dependsOn:
-    - name: cloudflared
-      namespace: network
   values:
-    fullnameOverride: ingress-nginx-external
+    fullnameOverride: ingress-nginx-internal
     controller:
       service:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: "tt.${SECRET_DOMAIN}"
-          lbipam.cilium.io/ips: "#{ bootstrap_cloudflare.tunnel.ingress_vip }#"
-        #% if bgp.enabled %#
-        externalTrafficPolicy: Local
-        #% else %#
+          lbipam.cilium.io/ips: "192.168.20.52"
         externalTrafficPolicy: Cluster
-        #% endif %#
       ingressClassResource:
-        name: external
-        default: false
-        controllerValue: k8s.io/external
+        name: internal
+        default: true
+        controllerValue: k8s.io/internal
       admissionWebhooks:
         objectSelector:
           matchExpressions:
             - key: ingress-class
               operator: In
-              values: ["external"]
+              values: ["internal"]
       config:
         client-body-buffer-size: 100M
         client-body-timeout: 120
@@ -71,11 +63,7 @@ spec:
           namespaceSelector:
             any: true
       extraArgs:
-        #% if bootstrap_cloudflare.acme.production %#
-        default-ssl-certificate: "network/${SECRET_DOMAIN/./-}-production-tls"
-        #% else %#
         default-ssl-certificate: "network/${SECRET_DOMAIN/./-}-staging-tls"
-        #% endif %#
       resources:
         requests:
           cpu: 100m

@@ -29,12 +29,8 @@ spec:
       service:
         annotations:
           external-dns.alpha.kubernetes.io/hostname: "tt.${SECRET_DOMAIN}"
-          lbipam.cilium.io/ips: "#{ bootstrap_cloudflare.tunnel.ingress_vip }#"
-        #% if bgp.enabled %#
-        externalTrafficPolicy: Local
-        #% else %#
+          lbipam.cilium.io/ips: ""
         externalTrafficPolicy: Cluster
-        #% endif %#
       ingressClassResource:
         name: external
         default: false
@@ -71,11 +67,7 @@ spec:
           namespaceSelector:
             any: true
       extraArgs:
-        #% if bootstrap_cloudflare.acme.production %#
-        default-ssl-certificate: "network/${SECRET_DOMAIN/./-}-production-tls"
-        #% else %#
         default-ssl-certificate: "network/${SECRET_DOMAIN/./-}-staging-tls"
-        #% endif %#
       resources:
         requests:
           cpu: 100m
