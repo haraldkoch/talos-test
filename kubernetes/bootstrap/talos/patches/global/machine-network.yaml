@@ -1,6 +1,8 @@
 machine:
   network:
-    disableSearchDomain: true
+    disableSearchDomain: false
     nameservers:
       - 199.85.99.6
       - 199.85.99.7
+    searchDomains:
+      - home.arpa
